@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "PITSTOP77",
+  title: "Pitstop77",
   description: "Mobil oto bakım servisi",
 };
 
@@ -25,4 +25,4 @@ export default function RootLayout({
       </body>
     </html>
   );
-}<meta name="google-site-verification" content="NlsE53lTOvE5b0UexWXGoWHw_Bb_44eTjvU_PrIPasA" />
+}
