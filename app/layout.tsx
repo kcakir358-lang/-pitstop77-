@@ -6,7 +6,7 @@ export const metadata = {
   verification: {
     google: "NlsE53lTOvE5b0UexWXGoWHw_Bb_44eTjvU_PrIPasA",
   },
-}
+};
 
 export default function RootLayout({
   children,
