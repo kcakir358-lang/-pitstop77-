@@ -138,10 +138,8 @@ export default function Home() {
 
             <p className="text-gray-300 text-xl leading-relaxed mb-10">
 
-              Mobil servis aracımız ile bulunduğunuz konuma geliyoruz.
-              Yağ değişimi, fren değişimi ve arıza tespiti hizmetlerini
-              profesyonel şekilde sunuyoruz.
-
+              Yalova mobil oto bakım servisi. 7/24 yağ değişimi,
+              fren değişimi ve arıza tespiti hizmeti sunuyoruz.
             </p>
 
             <div className="flex flex-wrap gap-5">
