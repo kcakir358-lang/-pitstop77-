@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://pitstop77web-five.vercel.app/sitemap.xml
