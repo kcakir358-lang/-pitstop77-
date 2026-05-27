@@ -1,11 +1,4 @@
-export default function sitemap() {
-  return [
-    {
-      url: "https://pitstop77web-five.vercel.app",
-      lastModified: new Date(),
-    },
-  ];
-}User-agent: *
+User-agent: *
 Allow: /
 
 Sitemap: https://pitstop77web-five.vercel.app/sitemap.xml
