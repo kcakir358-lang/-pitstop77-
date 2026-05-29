@@ -22,7 +22,16 @@ export default function AracDetayPage() {
         <h1 style={{ color: "#ef1111" }}>PITSTOP77</h1>
 
         <h2>Araç Bakım Kartı</h2>
-
+<img
+  src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https://pitstop77web-five.vercel.app/arac/77ABC123`}
+  alt="Araç QR Kodu"
+  style={{
+    background: "white",
+    padding: "12px",
+    borderRadius: "16px",
+    marginBottom: "25px",
+  }}
+/>
         <p><b>Plaka:</b> 77 ABC 123</p>
         <p><b>Müşteri:</b> Örnek Müşteri</p>
         <p><b>Telefon:</b> 0545 470 84 82</p>
