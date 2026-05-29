@@ -437,9 +437,16 @@ export default function Home() {
   </p>
 </section>
 
-      <footer className="footer">
-        PITSTOP77 Mobil Oto Bakım © 2026
-      </footer>
-    </main>
+<section className="container">
+  <h2>Yalova Mobil Oto Bakım Hizmeti</h2>
+
+  <p>
+    Pitstop77 olarak Yalova ve çevresinde mobil oto bakım hizmeti
+    sunuyoruz. Yağ değişimi, filtre değişimi, fren bakımı ve araç
+    kontrollerini bulunduğunuz konumda gerçekleştiriyoruz.
+  </p>
+</section>
+
+</main>
   );
 }

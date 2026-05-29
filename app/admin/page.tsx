@@ -20,21 +20,20 @@ export default function AdminPage() {
 
   const [talepler, setTalepler] = useState<any[]>([]);
 
-  useEffect(() => {
-    const unsub = onSnapshot(
-      collection(db, "servisTalepleri"),
-      (snapshot) => {
-        const liste = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        setTalepler(liste);
-      }
-    );
-
-    return () => unsub();
-  }, []);
+useEffect(() => {
+  setTalepler([
+    {
+      id: "1",
+      isim: "Örnek Müşteri",
+      telefon: "0542 725 52 17",
+      arac: "BMW 3.20",
+      konum: "Yalova",
+      hizmet: "Yağ Değişimi",
+      durum: "Bekliyor",
+      ucret: 0,
+    },
+  ]);
+}, []);
   return (
     <main className="admin-page">
       <style>{`
@@ -225,22 +224,28 @@ export default function AdminPage() {
       <div className="stats">
         <div className="stat-card">
           <p className="stat-label">Toplam İş</p>
-          <p className="stat-value">1</p>
+          <p className="stat-value">{talepler.length}</p>
         </div>
 
         <div className="stat-card">
           <p className="stat-label">Tamamlanan</p>
-          <p className="stat-value" style={{ color: "#22c55e" }}>0</p>
+          <p className="stat-value" style={{ color: "#22c55e" }}>
+  {talepler.filter((t) => t.durum === "Tamamlandı").length}
+</p>
         </div>
 
         <div className="stat-card">
           <p className="stat-label">Bekleyen</p>
-          <p className="stat-value" style={{ color: "#f59e0b" }}>1</p>
+          <p className="stat-value" style={{ color: "#f59e0b" }}>
+  {talepler.filter((t) => t.durum !== "Tamamlandı").length}
+</p>
         </div>
 
         <div className="stat-card">
           <p className="stat-label">Toplam Kazanç</p>
-          <p className="stat-value" style={{ color: "#ef4444" }}>₺0</p>
+          <p className="stat-value" style={{ color: "#ef4444" }}>
+  ₺{talepler.reduce((toplam, t) => toplam + Number(t.ucret || 0), 0)}
+</p>
         </div>
       </div>
 
