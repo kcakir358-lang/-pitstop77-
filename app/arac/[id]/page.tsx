@@ -23,7 +23,7 @@ export default function AracDetayPage() {
 
         <h2>Araç Bakım Kartı</h2>
 <img
-  src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https://pitstop77web-five.vercel.app/arac/77ABC123`}
+  src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https://pitstop77web-five.vercel.app/arac/77ABC123"
   alt="Araç QR Kodu"
   style={{
     background: "white",
