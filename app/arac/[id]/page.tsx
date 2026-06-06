@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
-
 const firebaseConfig = {
   apiKey: "AIzaSyBwNzCNF3RRvlc0MdBhRh4Z4471tKOgJCI",
   authDomain: "pitstop77-e1074.firebaseapp.com",
@@ -15,7 +14,7 @@ const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
-
+ 
 export default function AracPage({ params }: { params: { id: string } }) {
   const [arac, setArac] = useState<any>(null);
 

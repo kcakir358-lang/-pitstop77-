@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { initializeApp, getApps, getApp } from "firebase/app";
 import {
   getFirestore,
+  initializeFirestore,
   collection,
   doc,
   setDoc,
@@ -22,7 +23,15 @@ const firebaseConfig = {
 };
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-const db = getFirestore(app);
+const db = (() => {
+  try {
+    return initializeFirestore(app, {
+      experimentalForceLongPolling: true,
+    });
+  } catch {
+    return getFirestore(app);
+  }
+})();
 
 export default function AdminPage() {
   const [giris, setGiris] = useState(false);
@@ -46,10 +55,10 @@ export default function AdminPage() {
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "araclar"), (snapshot) => {
-      const liste = snapshot.docs.map((d) => ({
-        id: d.id,
-        ...d.data(),
-      }));
+     const liste = snapshot.docs.map((d) => ({
+  ...d.data(),
+  id: d.id,
+}));
 
       setAraclar(liste);
     });
@@ -245,7 +254,7 @@ export default function AdminPage() {
         <h2>Kayıtlı Araçlar</h2>
 
         {araclar.map((arac) => {
-          const aracLink = `https://pitstop77web-five.vercel.app/arac/${String(arac.id).trim()}`;
+         const aracLink = `https://pitstop77web-five.vercel.app/arac/${arac.id}`;
 
           return (
             <div key={arac.id} style={styles.card}>
