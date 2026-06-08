@@ -83,7 +83,7 @@ export default function AdminPage() {
       return;
     }
 
-    const id = duzenlenenId || plaka.replaceAll(" ", "").toUpperCase();
+    const id = duzenlenenId || plaka.replace(/\s+/g, "").toUpperCase();
 
     await setDoc(
       doc(db, "araclar", id),
@@ -270,9 +270,9 @@ export default function AdminPage() {
               <p><b>İşlem:</b> {arac.islem}</p>
 
               <img
-  src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(aracLink)}&cache=${arac.id}-${Date.now()}`}
-  alt="QR"
-  style={styles.qr}
+      src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(aracLink)}&v=${arac.id}-${Date.now()}`}
+      alt="QR"
+      style={styles.qr}
 />
 
               <div style={styles.actions}>
