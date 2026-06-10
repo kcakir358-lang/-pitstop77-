@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { initializeApp, getApps, getApp } from "firebase/app";
+import jsPDF from "jspdf";
 import {
   getFirestore,
   initializeFirestore,
@@ -12,6 +13,12 @@ import {
   deleteDoc,
   updateDoc,
 } from "firebase/firestore";
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL,
+} from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBwNzCNF3RRvlc0MdBhRh4Z4471tKOgJCI",
@@ -23,6 +30,8 @@ const firebaseConfig = {
 };
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+const storage = getStorage(app);
+
 const db = (() => {
   try {
     return initializeFirestore(app, {
@@ -36,8 +45,10 @@ const db = (() => {
 export default function AdminPage() {
   const [giris, setGiris] = useState(false);
   const [sifre, setSifre] = useState("");
+  const [arama, setArama] = useState("");
 
   const [araclar, setAraclar] = useState<any[]>([]);
+  const [talepler, setTalepler] = useState<any[]>([]);
 
   const [plaka, setPlaka] = useState("");
   const [musteri, setMusteri] = useState("");
@@ -52,15 +63,29 @@ export default function AdminPage() {
   const [bakimKm, setBakimKm] = useState("");
   const [bakimIslem, setBakimIslem] = useState("Yağ Değişimi");
   const [bakimNot, setBakimNot] = useState("");
+  const [bakimDosya, setBakimDosya] = useState<File | null>(null);
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "araclar"), (snapshot) => {
-     const liste = snapshot.docs.map((d) => ({
-  ...d.data(),
-  id: d.id,
-}));
+      const liste = snapshot.docs.map((d) => ({
+        ...d.data(),
+        id: d.id,
+      }));
 
       setAraclar(liste);
+    });
+
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "talepler"), (snapshot) => {
+      const liste = snapshot.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      }));
+
+      setTalepler(liste);
     });
 
     return () => unsub();
@@ -110,7 +135,6 @@ export default function AdminPage() {
 
   const aracSil = async (id: string) => {
     if (!confirm("Bu aracı silmek istediğine emin misin?")) return;
-
     await deleteDoc(doc(db, "araclar", id));
     alert("Araç silindi");
   };
@@ -136,11 +160,27 @@ export default function AdminPage() {
 
     const secilenArac = araclar.find((a) => a.id === bakimAracId);
 
+    let medyaUrl = "";
+    let medyaTipi = "";
+
+    if (bakimDosya) {
+      const dosyaRef = ref(
+        storage,
+        `araclar/${bakimAracId}/${Date.now()}-${bakimDosya.name}`
+      );
+
+      await uploadBytes(dosyaRef, bakimDosya);
+      medyaUrl = await getDownloadURL(dosyaRef);
+      medyaTipi = bakimDosya.type.startsWith("video") ? "video" : "foto";
+    }
+
     const yeniBakim = {
       tarih: new Date().toLocaleDateString("tr-TR"),
       km: bakimKm,
       islem: bakimIslem,
       not: bakimNot,
+      medyaUrl,
+      medyaTipi,
     };
 
     const eskiGecmis = secilenArac?.bakimGecmisi || [];
@@ -159,6 +199,97 @@ export default function AdminPage() {
     setBakimKm("");
     setBakimIslem("Yağ Değişimi");
     setBakimNot("");
+    setBakimDosya(null);
+  };
+
+  const talepSil = async (id: string) => {
+    if (!confirm("Bu talebi silmek istediğine emin misin?")) return;
+
+    await deleteDoc(doc(db, "talepler", id));
+    alert("Talep silindi");
+  };
+
+  const talebiAracaCevir = async (talep: any) => {
+    const id = String(talep.plaka || "")
+      .replace(/\s+/g, "")
+      .toUpperCase();
+
+    if (!id) {
+      alert("Talepte plaka yok");
+      return;
+    }
+
+    await setDoc(
+      doc(db, "araclar", id),
+      {
+        id,
+        plaka: talep.plaka,
+        musteri: talep.ad,
+        telefon: talep.telefon,
+        marka: talep.arac,
+        model: "",
+        km: "",
+        islem: talep.hizmet,
+        sonBakim: new Date().toLocaleDateString("tr-TR"),
+        sonrakiBakimKm: "",
+        link: `https://pitstop77web-five.vercel.app/arac/${id}`,
+        talepId: talep.id,
+        updatedAt: new Date(),
+      },
+      { merge: true }
+    );
+
+    await deleteDoc(doc(db, "talepler", talep.id));
+    alert("Talep araç kaydına dönüştürüldü");
+  };
+
+  const talepDurumGuncelle = async (id: string, durum: string) => {
+    await updateDoc(doc(db, "talepler", id), {
+      durum,
+    });
+
+    alert("Talep durumu güncellendi");
+  };
+
+  const pdfOlustur = (arac: any) => {
+    const belge = new jsPDF();
+
+    belge.setFontSize(20);
+    belge.text("PITSTOP77 SERVIS RAPORU", 20, 20);
+
+    belge.setFontSize(12);
+    belge.text(`Plaka: ${arac.plaka}`, 20, 40);
+    belge.text(`Musteri: ${arac.musteri}`, 20, 50);
+    belge.text(`Telefon: ${arac.telefon}`, 20, 60);
+    belge.text(`Arac: ${arac.marka} ${arac.model}`, 20, 70);
+    belge.text(`KM: ${arac.km}`, 20, 80);
+    belge.text(`Son Bakim: ${arac.sonBakim || "-"}`, 20, 90);
+    belge.text(`Son Islem: ${arac.islem || "-"}`, 20, 100);
+
+    let y = 120;
+
+    belge.setFontSize(16);
+    belge.text("Bakim Gecmisi", 20, y);
+    y += 15;
+
+    if (arac.bakimGecmisi?.length) {
+      arac.bakimGecmisi.forEach((bakim: any) => {
+        belge.setFontSize(11);
+        belge.text(`${bakim.tarih} | ${bakim.km} KM | ${bakim.islem}`, 20, y);
+        y += 10;
+
+        if (bakim.not) {
+          belge.text(`Not: ${bakim.not}`, 25, y);
+          y += 10;
+        }
+
+        y += 5;
+      });
+    } else {
+      belge.text("Bakim kaydi bulunamadi.", 20, y);
+    }
+
+    belge.save(`${arac.plaka}-servis-raporu.pdf`);
   };
 
   if (!giris) {
@@ -207,6 +338,7 @@ export default function AdminPage() {
           <option>Fren Değişimi</option>
           <option>Arıza Tespiti</option>
           <option>Filtre Değişimi</option>
+          <option>Buji Değişimi</option>
           <option>Genel Kontrol</option>
         </select>
 
@@ -219,6 +351,71 @@ export default function AdminPage() {
             Vazgeç
           </button>
         )}
+      </section>
+
+      <section style={styles.panel}>
+        <h2>Gelen Talepler</h2>
+
+        {talepler.length === 0 && (
+          <p style={{ color: "#aaa" }}>Henüz gelen talep yok.</p>
+        )}
+
+        {talepler.map((talep) => (
+          <div key={talep.id} style={styles.card}>
+            <h3 style={styles.plate}>{talep.plaka}</h3>
+
+            <p><b>Ad:</b> {talep.ad}</p>
+            <p><b>Telefon:</b> {talep.telefon}</p>
+            <p><b>Araç:</b> {talep.arac}</p>
+            <p><b>Konum:</b> {talep.konum}</p>
+            <p><b>Hizmet:</b> {talep.hizmet}</p>
+            <p><b>Durum:</b> {talep.durum}</p>
+
+            <div style={styles.actions}>
+              <button
+                onClick={() => talepDurumGuncelle(talep.id, "İşlemde")}
+                style={styles.grayButton}
+              >
+                İşlemde
+              </button>
+
+              <button
+                onClick={() => talepDurumGuncelle(talep.id, "Tamamlandı")}
+                style={styles.blueButton}
+              >
+                Tamamlandı
+              </button>
+
+              <button
+                onClick={() => talebiAracaCevir(talep)}
+                style={styles.blueButton}
+              >
+                Araç Kaydına Çevir
+              </button>
+
+              <a
+                href={`https://wa.me/90${String(talep.telefon)
+                  .replace(/\D/g, "")
+                  .replace(/^0/, "")}?text=${encodeURIComponent(
+                  `Merhaba ${talep.ad},
+
+PITSTOP77 bakım talebiniz alınmıştır. Size yardımcı olmak için ulaşıyoruz.`
+                )}`}
+                target="_blank"
+                style={styles.linkButton}
+              >
+                WhatsApp
+              </a>
+
+              <button
+                onClick={() => talepSil(talep.id)}
+                style={styles.redButton}
+              >
+                Talebi Sil
+              </button>
+            </div>
+          </div>
+        ))}
       </section>
 
       <section style={styles.panel}>
@@ -245,6 +442,13 @@ export default function AdminPage() {
 
         <input style={styles.input} placeholder="Not" value={bakimNot} onChange={(e) => setBakimNot(e.target.value)} />
 
+        <input
+          type="file"
+          accept="image/*,video/*"
+          onChange={(e) => setBakimDosya(e.target.files?.[0] || null)}
+          style={styles.input}
+        />
+
         <button onClick={bakimEkle} style={styles.redButton}>
           Bakım Geçmişi Ekle
         </button>
@@ -253,48 +457,100 @@ export default function AdminPage() {
       <section style={{ marginTop: 30 }}>
         <h2>Kayıtlı Araçlar</h2>
 
-        {araclar.map((arac) => {
-         const aracLink = `https://pitstop77web-five.vercel.app/arac/${arac.id}`;
+        <input
+          style={styles.input}
+          placeholder="Plaka, müşteri veya telefon ara..."
+          value={arama}
+          onChange={(e) => setArama(e.target.value)}
+        />
 
-          return (
-            <div key={arac.id} style={styles.card}>
-              <h3 style={styles.plate}>{arac.plaka}</h3>
+        {araclar
+          .filter((arac) => {
+            const kelime = arama.toLowerCase();
 
-              <p><b>ID:</b> {arac.id}</p>
-              <p><b>Müşteri:</b> {arac.musteri}</p>
-              <p><b>Telefon:</b> {arac.telefon}</p>
-              <p><b>Araç:</b> {arac.marka} {arac.model}</p>
-              <p><b>KM:</b> {arac.km}</p>
-              <p><b>Son Bakım:</b> {arac.sonBakim}</p>
-              <p><b>Sonraki Bakım KM:</b> {arac.sonrakiBakimKm}</p>
-              <p><b>İşlem:</b> {arac.islem}</p>
+            return (
+              arac.plaka?.toLowerCase().includes(kelime) ||
+              arac.musteri?.toLowerCase().includes(kelime) ||
+              arac.telefon?.toLowerCase().includes(kelime)
+            );
+          })
+          .map((arac) => {
+            const aracLink = `https://pitstop77web-five.vercel.app/arac/${arac.id}`;
+            const kalanKm = Number(arac.sonrakiBakimKm) - Number(arac.km);
 
-              <img
-      src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(aracLink)}&v=${arac.id}-${Date.now()}`}
-      alt="QR"
-      style={styles.qr}
-/>
+            return (
+              <div key={arac.id} style={styles.card}>
+                <h3 style={styles.plate}>{arac.plaka}</h3>
 
-              <div style={styles.actions}>
-                <a href={aracLink} target="_blank" style={styles.linkButton}>
-                  Sayfayı Aç
-                </a>
+                <p><b>ID:</b> {arac.id}</p>
+                <p><b>Müşteri:</b> {arac.musteri}</p>
+                <p><b>Telefon:</b> {arac.telefon}</p>
+                <p><b>Araç:</b> {arac.marka} {arac.model}</p>
+                <p><b>KM:</b> {arac.km}</p>
+                <p><b>Son Bakım:</b> {arac.sonBakim}</p>
+                <p><b>Sonraki Bakım KM:</b> {arac.sonrakiBakimKm}</p>
 
-                <button onClick={() => window.print()} style={styles.grayButton}>
-                  QR Yazdır
-                </button>
+                {kalanKm <= 2000 && kalanKm > 0 && (
+                  <div style={styles.warning}>
+                    ⚠ Bakıma {kalanKm} KM kaldı
+                  </div>
+                )}
 
-                <button onClick={() => aracDuzenle(arac)} style={styles.blueButton}>
-                  Düzenle
-                </button>
+                {Number(arac.km) >= Number(arac.sonrakiBakimKm) && (
+                  <div style={styles.danger}>
+                    🔴 Bakım zamanı geldi!
+                  </div>
+                )}
 
-                <button onClick={() => aracSil(arac.id)} style={styles.redButton}>
-                  Aracı Sil
-                </button>
+                <p><b>İşlem:</b> {arac.islem}</p>
+
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(aracLink)}&v=${arac.id}`}
+                  alt="QR"
+                  style={styles.qr}
+                />
+
+                <div style={styles.actions}>
+                  <a href={aracLink} target="_blank" style={styles.linkButton}>
+                    Sayfayı Aç
+                  </a>
+
+                  <button onClick={() => window.print()} style={styles.grayButton}>
+                    QR Yazdır
+                  </button>
+
+                  <button onClick={() => aracDuzenle(arac)} style={styles.blueButton}>
+                    Düzenle
+                  </button>
+
+                  <a
+                    href={`https://wa.me/90${String(arac.telefon)
+                      .replace(/\D/g, "")
+                      .replace(/^0/, "")}?text=${encodeURIComponent(
+                      `Merhaba ${arac.musteri},
+
+Aracınızın bakım zamanı yaklaşmıştır.
+
+PITSTOP77
+0545 470 84 82`
+                    )}`}
+                    target="_blank"
+                    style={styles.linkButton}
+                  >
+                    WhatsApp Hatırlat
+                  </a>
+
+                  <button onClick={() => pdfOlustur(arac)} style={styles.blueButton}>
+                    PDF Oluştur
+                  </button>
+
+                  <button onClick={() => aracSil(arac.id)} style={styles.redButton}>
+                    Aracı Sil
+                  </button>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
       </section>
     </main>
   );
@@ -376,7 +632,6 @@ const styles: any = {
     border: "none",
     fontWeight: 900,
     cursor: "pointer",
-    marginRight: 10,
   },
   blueButton: {
     background: "#2563eb",
@@ -395,7 +650,6 @@ const styles: any = {
     border: "none",
     fontWeight: 900,
     cursor: "pointer",
-    marginRight: 10,
   },
   linkButton: {
     background: "#16a34a",
@@ -403,6 +657,22 @@ const styles: any = {
     padding: "12px 18px",
     borderRadius: 12,
     textDecoration: "none",
+    fontWeight: 900,
+  },
+  warning: {
+    background: "#f59e0b",
+    color: "#000",
+    padding: 12,
+    borderRadius: 12,
+    marginTop: 10,
+    fontWeight: 900,
+  },
+  danger: {
+    background: "#dc2626",
+    color: "white",
+    padding: 12,
+    borderRadius: 12,
+    marginTop: 10,
     fontWeight: 900,
   },
 };

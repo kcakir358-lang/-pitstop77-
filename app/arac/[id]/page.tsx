@@ -114,7 +114,62 @@ export default function AracPage({
               <span>Son İşlem</span>
               <b>{arac.islem || "-"}</b>
             </div>
+<div
+  style={{
+    marginTop: 30,
+    borderTop: "1px solid #7f1d1d",
+    paddingTop: 25,
+  }}
+>
+  <h2 style={{ color: "#ef4444" }}>Bakım Geçmişi</h2>
 
+  {arac.bakimGecmisi && arac.bakimGecmisi.length > 0 ? (
+    arac.bakimGecmisi.map((bakim: any, index: number) => (
+      <div
+        key={index}
+        style={{
+          background: "#050505",
+          border: "1px solid #7f1d1d",
+          borderRadius: 16,
+          padding: 18,
+          marginBottom: 15,
+        }}
+      >
+        <p><b>Tarih:</b> {bakim.tarih}</p>
+        <p><b>KM:</b> {bakim.km}</p>
+        <p><b>İşlem:</b> {bakim.islem}</p>
+        <p><b>Not:</b> {bakim.not || "-"}</p>
+      {bakim.medyaUrl && bakim.medyaTipi === "foto" && (
+  <img
+    src={bakim.medyaUrl}
+    alt="Bakım Fotoğrafı"
+    style={{
+      width: "100%",
+      borderRadius: 16,
+      marginTop: 15,
+      border: "1px solid #7f1d1d",
+    }}
+  />
+)}
+
+{bakim.medyaUrl && bakim.medyaTipi === "video" && (
+  <video
+    src={bakim.medyaUrl}
+    controls
+    style={{
+      width: "100%",
+      borderRadius: 16,
+      marginTop: 15,
+      border: "1px solid #7f1d1d",
+    }}
+  />
+)}
+      </div>
+    ))
+  ) : (
+    <p style={{ color: "#aaa" }}>Henüz bakım geçmişi yok.</p>
+  )}
+</div>
             <div style={styles.infoItem}>
               <span>Servis</span>
               <b>PITSTOP77</b>
