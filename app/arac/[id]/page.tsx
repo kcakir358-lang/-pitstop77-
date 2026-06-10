@@ -92,12 +92,12 @@ export default function AracPage({
           <div style={styles.grid}>
             <div style={styles.infoItem}>
               <span>Müşteri</span>
-              <b>{arac.musteri || "-"}</b>
+            <p><b>Müşteri:</b> Gizli</p>
             </div>
 
             <div style={styles.infoItem}>
               <span>Telefon</span>
-              <b>{arac.telefon || "-"}</b>
+             <p><b>Telefon:</b> Gizli</p>
             </div>
 
             <div style={styles.infoItem}>

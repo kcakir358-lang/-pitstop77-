@@ -1,9 +1,20 @@
 import type { Metadata } from "next";
 import "./globals.css";
 export const metadata = {
-  title: "PITSTOP77 | Mobil Oto Bakım Servisi",
+  title:
+    "PITSTOP77 Mobil Oto Bakım | Yalova Yerinde Yağ Değişimi ve Araç Bakımı",
   description:
-    "7/24 mobil oto bakım, yağ değişimi, fren değişimi ve arıza tespiti hizmeti.",
+    "PITSTOP77 Yalova mobil oto bakım hizmeti. Yerinde yağ değişimi, filtre değişimi, fren bakımı, akü kontrolü, arıza tespiti ve genel araç bakımı. Aracınızın bulunduğu konuma geliyoruz.",
+  keywords: [
+    "Yalova mobil oto bakım",
+    "yerinde yağ değişimi",
+    "mobil servis",
+    "araç bakımı",
+    "Yalova yağ değişimi",
+    "fren değişimi",
+    "oto servis",
+    "Pitstop77",
+  ],
 };
 
 export default function RootLayout({

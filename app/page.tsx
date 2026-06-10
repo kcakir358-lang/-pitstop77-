@@ -522,7 +522,9 @@ export default function Home() {
           <h2>🔍 Plaka ile Araç Sorgula</h2>
 
           <p>Bakım geçmişinizi görmek için plakanızı yazın.</p>
-
+<p style={{ color: "#aaa", fontSize: 14 }}>
+  Gizlilik nedeniyle müşteri adı ve telefon bilgileri gösterilmez.
+</p>
           <input
             placeholder="Örn: 77 ADP 019"
             value={sorguPlaka}
