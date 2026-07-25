@@ -424,7 +424,7 @@ export default function Home() {
             <a href="#talep">Talep Oluştur</a>
           </nav>
 
-          <a className="call-btn" href="https://wa.me/905427255217">
+          <a className="call-btn" href="https://wa.me/905454708482">
             Servis Çağır
           </a>
         </div>
@@ -446,7 +446,7 @@ export default function Home() {
             </p>
 
             <div className="hero-actions">
-              <a className="primary" href="https://wa.me/905427255217">
+              <a className="primary" href="https://wa.me/905454708482">
                 WhatsApp’tan Servis Çağır
               </a>
 
@@ -616,7 +616,7 @@ export default function Home() {
             Aracın için destek almak istiyorsan WhatsApp üzerinden bize hemen ulaş.
           </p>
 
-          <a className="primary" href="https://wa.me/905427255217">
+          <a className="primary" href="https://wa.me/905454708482">
             WhatsApp ile İletişime Geç
           </a>
         </div>
@@ -665,7 +665,7 @@ export default function Home() {
       </section>
 
       <footer className="footer">
-        PITSTOP77 Mobil Oto Bakım • Yalova • 0542 725 52 17
+        PITSTOP77 Mobil Oto Bakım • Yalova • 0 545 470 84 82
       </footer>
     </main>
   );

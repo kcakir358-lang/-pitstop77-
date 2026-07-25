@@ -66,6 +66,11 @@ export default function AdminPage() {
   const [bakimDosya, setBakimDosya] = useState<File | null>(null);
 
   useEffect(() => {
+    const adminGiris = localStorage.getItem("pitstop77_admin_giris");
+    if (adminGiris === "ok") setGiris(true);
+  }, []);
+
+  useEffect(() => {
     const unsub = onSnapshot(collection(db, "araclar"), (snapshot) => {
       const liste = snapshot.docs.map((d) => ({
         ...d.data(),
@@ -148,7 +153,6 @@ export default function AdminPage() {
     setModel(arac.model || "");
     setKm(arac.km || "");
     setIslem(arac.islem || "Yağ Değişimi");
-
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -204,7 +208,6 @@ export default function AdminPage() {
 
   const talepSil = async (id: string) => {
     if (!confirm("Bu talebi silmek istediğine emin misin?")) return;
-
     await deleteDoc(doc(db, "talepler", id));
     alert("Talep silindi");
   };
@@ -244,10 +247,7 @@ export default function AdminPage() {
   };
 
   const talepDurumGuncelle = async (id: string, durum: string) => {
-    await updateDoc(doc(db, "talepler", id), {
-      durum,
-    });
-
+    await updateDoc(doc(db, "talepler", id), { durum });
     alert("Talep durumu güncellendi");
   };
 
@@ -292,6 +292,134 @@ export default function AdminPage() {
     belge.save(`${arac.plaka}-servis-raporu.pdf`);
   };
 
+  const qrYazdir = (arac: any) => {
+    const aracLink = `https://pitstop77web-five.vercel.app/arac/${arac.id}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=${encodeURIComponent(aracLink)}`;
+
+    const pencere = window.open("", "_blank", "width=520,height=760");
+
+    if (!pencere) {
+      alert("Yazdırma penceresi açılamadı");
+      return;
+    }
+
+    pencere.document.write(`
+      <html>
+        <head>
+          <title>PITSTOP77 QR Etiketi</title>
+          <style>
+            body {
+              margin: 0;
+              padding: 30px;
+              font-family: Arial, sans-serif;
+              background: #f3f4f6;
+              text-align: center;
+            }
+
+            .etiket {
+              width: 340px;
+              margin: auto;
+              background: #050505;
+              color: white;
+              border: 4px solid #dc2626;
+              border-radius: 26px;
+              padding: 24px;
+            }
+
+            .logo {
+              font-size: 30px;
+              font-weight: 900;
+              color: #ef4444;
+              letter-spacing: 1px;
+            }
+
+            .sub {
+              font-size: 15px;
+              margin-top: 4px;
+              color: #ddd;
+            }
+
+            .plaka {
+              background: white;
+              color: black;
+              font-size: 34px;
+              font-weight: 900;
+              border-radius: 16px;
+              padding: 12px;
+              margin: 22px 0;
+              border: 3px solid #dc2626;
+            }
+
+            .qr {
+              background: white;
+              padding: 14px;
+              border-radius: 20px;
+              width: 280px;
+              height: 280px;
+            }
+
+            .text {
+              margin-top: 18px;
+              font-size: 16px;
+              line-height: 1.5;
+            }
+
+            .phone {
+              margin-top: 18px;
+              font-size: 22px;
+              font-weight: 900;
+              color: #ef4444;
+            }
+
+            .small {
+              margin-top: 10px;
+              font-size: 12px;
+              color: #aaa;
+            }
+
+            @media print {
+              body {
+                background: white;
+              }
+
+              .etiket {
+                page-break-inside: avoid;
+              }
+            }
+          </style>
+        </head>
+
+        <body>
+          <div class="etiket">
+            <div class="logo">PITSTOP77</div>
+            <div class="sub">Mobil Oto Bakım</div>
+
+            <div class="plaka">${arac.plaka || ""}</div>
+
+            <img class="qr" src="${qrUrl}" />
+
+            <div class="text">
+              Bakım geçmişini görüntülemek için<br />
+              QR kodu okutunuz.
+            </div>
+
+            <div class="phone">0545 470 84 82</div>
+
+            <div class="small">Yalova Mobil Oto Bakım</div>
+          </div>
+
+          <script>
+            window.onload = function() {
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `);
+
+    pencere.document.close();
+  };
+
   if (!giris) {
     return (
       <main style={styles.loginPage}>
@@ -307,9 +435,14 @@ export default function AdminPage() {
           />
 
           <button
-            onClick={() =>
-              sifre === "pitstop77" ? setGiris(true) : alert("Şifre yanlış")
-            }
+            onClick={() => {
+              if (sifre === "pitstop77") {
+                localStorage.setItem("pitstop77_admin_giris", "ok");
+                setGiris(true);
+              } else {
+                alert("Şifre yanlış");
+              }
+            }}
             style={styles.redButton}
           >
             Giriş Yap
@@ -321,7 +454,19 @@ export default function AdminPage() {
 
   return (
     <main style={styles.page}>
-      <h1 style={styles.logo}>PITSTOP77 Admin</h1>
+      <div style={styles.topBar}>
+        <h1 style={styles.logo}>PITSTOP77 Admin</h1>
+
+        <button
+          onClick={() => {
+            localStorage.removeItem("pitstop77_admin_giris");
+            setGiris(false);
+          }}
+          style={styles.grayButton}
+        >
+          Çıkış Yap
+        </button>
+      </div>
 
       <section style={styles.panel}>
         <h2>{duzenlenenId ? "Araç Bilgilerini Düzenle" : "Yeni Araç Ekle"}</h2>
@@ -372,24 +517,15 @@ export default function AdminPage() {
             <p><b>Durum:</b> {talep.durum}</p>
 
             <div style={styles.actions}>
-              <button
-                onClick={() => talepDurumGuncelle(talep.id, "İşlemde")}
-                style={styles.grayButton}
-              >
+              <button onClick={() => talepDurumGuncelle(talep.id, "İşlemde")} style={styles.grayButton}>
                 İşlemde
               </button>
 
-              <button
-                onClick={() => talepDurumGuncelle(talep.id, "Tamamlandı")}
-                style={styles.blueButton}
-              >
+              <button onClick={() => talepDurumGuncelle(talep.id, "Tamamlandı")} style={styles.blueButton}>
                 Tamamlandı
               </button>
 
-              <button
-                onClick={() => talebiAracaCevir(talep)}
-                style={styles.blueButton}
-              >
+              <button onClick={() => talebiAracaCevir(talep)} style={styles.blueButton}>
                 Araç Kaydına Çevir
               </button>
 
@@ -407,10 +543,7 @@ PITSTOP77 bakım talebiniz alınmıştır. Size yardımcı olmak için ulaşıyo
                 WhatsApp
               </a>
 
-              <button
-                onClick={() => talepSil(talep.id)}
-                style={styles.redButton}
-              >
+              <button onClick={() => talepSil(talep.id)} style={styles.redButton}>
                 Talebi Sil
               </button>
             </div>
@@ -515,7 +648,7 @@ PITSTOP77 bakım talebiniz alınmıştır. Size yardımcı olmak için ulaşıyo
                     Sayfayı Aç
                   </a>
 
-                  <button onClick={() => window.print()} style={styles.grayButton}>
+                  <button onClick={() => qrYazdir(arac)} style={styles.grayButton}>
                     QR Yazdır
                   </button>
 
@@ -580,6 +713,13 @@ const styles: any = {
     padding: 30,
     width: "100%",
     maxWidth: 400,
+  },
+  topBar: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 20,
+    flexWrap: "wrap",
   },
   logo: {
     color: "#ef1111",

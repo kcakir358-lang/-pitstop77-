@@ -211,7 +211,7 @@ export default function AracPage({
         </section>
 
         <div style={styles.footer}>
-          <a href="https://wa.me/905427255217" style={styles.whatsapp}>
+          <a href="https://wa.me/905454708482" style={styles.whatsapp}>
             WhatsApp ile Servis Çağır
           </a>
 
