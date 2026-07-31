@@ -56,6 +56,7 @@ export default function AdminPage() {
   const [marka, setMarka] = useState("");
   const [model, setModel] = useState("");
   const [km, setKm] = useState("");
+  const [aciklama, setAciklama] = useState("");
   const [islem, setIslem] = useState("Yağ Değişimi");
   const [duzenlenenId, setDuzenlenenId] = useState("");
 
@@ -103,6 +104,7 @@ export default function AdminPage() {
     setMarka("");
     setModel("");
     setKm("");
+    setAciklama("");
     setIslem("Yağ Değişimi");
     setDuzenlenenId("");
   };
@@ -125,6 +127,7 @@ export default function AdminPage() {
         marka,
         model,
         km,
+        aciklama,
         islem,
         sonBakim: new Date().toLocaleDateString("tr-TR"),
         sonrakiBakimKm: Number(km || 0) + 10000,
@@ -152,6 +155,7 @@ export default function AdminPage() {
     setMarka(arac.marka || "");
     setModel(arac.model || "");
     setKm(arac.km || "");
+    setAciklama(arac.aciklama || "");
     setIslem(arac.islem || "Yağ Değişimi");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -232,6 +236,7 @@ export default function AdminPage() {
         marka: talep.arac,
         model: "",
         km: "",
+        aciklama: "",
         islem: talep.hizmet,
         sonBakim: new Date().toLocaleDateString("tr-TR"),
         sonrakiBakimKm: "",
@@ -266,7 +271,19 @@ export default function AdminPage() {
     belge.text(`Son Bakim: ${arac.sonBakim || "-"}`, 20, 90);
     belge.text(`Son Islem: ${arac.islem || "-"}`, 20, 100);
 
-    let y = 120;
+    let y = 115;
+
+    if (arac.aciklama) {
+      belge.setFontSize(12);
+      belge.text("Aciklama / Servis Notu:", 20, y);
+      y += 8;
+
+      const aciklamaSatirlari = belge.splitTextToSize(String(arac.aciklama), 170);
+      belge.text(aciklamaSatirlari, 20, y);
+      y += aciklamaSatirlari.length * 7 + 10;
+    } else {
+      y += 5;
+    }
 
     belge.setFontSize(16);
     belge.text("Bakim Gecmisi", 20, y);
@@ -478,6 +495,14 @@ export default function AdminPage() {
         <input style={styles.input} placeholder="Model" value={model} onChange={(e) => setModel(e.target.value)} />
         <input style={styles.input} placeholder="KM" value={km} onChange={(e) => setKm(e.target.value)} />
 
+        <textarea
+          style={styles.textarea}
+          placeholder="Açıklama / Servis notları (isteğe bağlı)"
+          value={aciklama}
+          onChange={(e) => setAciklama(e.target.value)}
+          rows={5}
+        />
+
         <select style={styles.input} value={islem} onChange={(e) => setIslem(e.target.value)}>
           <option>Yağ Değişimi</option>
           <option>Fren Değişimi</option>
@@ -592,7 +617,7 @@ PITSTOP77 bakım talebiniz alınmıştır. Size yardımcı olmak için ulaşıyo
 
         <input
           style={styles.input}
-          placeholder="Plaka, müşteri veya telefon ara..."
+          placeholder="Plaka, müşteri, telefon veya açıklama ara..."
           value={arama}
           onChange={(e) => setArama(e.target.value)}
         />
@@ -604,7 +629,8 @@ PITSTOP77 bakım talebiniz alınmıştır. Size yardımcı olmak için ulaşıyo
             return (
               arac.plaka?.toLowerCase().includes(kelime) ||
               arac.musteri?.toLowerCase().includes(kelime) ||
-              arac.telefon?.toLowerCase().includes(kelime)
+              arac.telefon?.toLowerCase().includes(kelime) ||
+              arac.aciklama?.toLowerCase().includes(kelime)
             );
           })
           .map((arac) => {
@@ -636,6 +662,15 @@ PITSTOP77 bakım talebiniz alınmıştır. Size yardımcı olmak için ulaşıyo
                 )}
 
                 <p><b>İşlem:</b> {arac.islem}</p>
+
+                {arac.aciklama && (
+                  <div style={styles.noteBox}>
+                    <b style={{ color: "#ef4444" }}>Açıklama / Servis Notu:</b>
+                    <p style={{ marginBottom: 0, whiteSpace: "pre-wrap" }}>
+                      {arac.aciklama}
+                    </p>
+                  </div>
+                )}
 
                 <img
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(aracLink)}&v=${arac.id}`}
@@ -751,6 +786,26 @@ const styles: any = {
     background: "#050505",
     color: "white",
     border: "1px solid #7f1d1d",
+  },
+  textarea: {
+    width: "100%",
+    minHeight: 120,
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 15,
+    background: "#050505",
+    color: "white",
+    border: "1px solid #7f1d1d",
+    resize: "vertical",
+    fontFamily: "Arial",
+  },
+  noteBox: {
+    marginTop: 15,
+    padding: 15,
+    background: "#050505",
+    border: "1px solid #7f1d1d",
+    borderRadius: 12,
+    lineHeight: 1.6,
   },
   qr: {
     background: "white",
